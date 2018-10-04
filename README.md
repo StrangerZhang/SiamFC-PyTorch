@@ -21,10 +21,10 @@ python bin/train_siamfc.py --gpu_id [gpu_id] --data_dir path/to/output_dir
 ## Benchmark results
 #### OTB100
 
-| Tracker 			 										| AUC						 |
+| Tracker 			    | AUC            |
 | --------------------------------- | -------------- |
 | SiamFC(converted from matconvnet) | 55.54(vs 0.582)|
-| SiamFC(trained from scratch)      | 							 |
+| SiamFC(trained from scratch)      | 56.16(vs 0.582)|
 
 work in progress
 
