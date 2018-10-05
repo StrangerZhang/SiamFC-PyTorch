@@ -28,9 +28,6 @@ python bin/train_siamfc.py --gpu_id [gpu_id] --data_dir path/to/output_dir
 
 work in progress
 
-## Note
-cv2.resive to upsample the response will drop 1~2 AUC score
-
 
 
 ## Reference
