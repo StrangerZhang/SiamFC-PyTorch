@@ -24,7 +24,7 @@ python bin/train_siamfc.py --gpu_id [gpu_id] --data_dir path/to/output_dir
 | Tracker 			    | AUC            |
 | --------------------------------- | -------------- |
 | SiamFC(converted from matconvnet) | 55.54(vs 0.582)|
-| SiamFC(trained from scratch)      | 56.16(vs 0.582)|
+| SiamFC(trained from scratch)      | 57.75(vs 0.582)|
 
 work in progress
 
