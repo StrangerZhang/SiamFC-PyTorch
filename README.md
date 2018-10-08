@@ -1,6 +1,8 @@
 # Pytorch implementation of SiamFC
 
 ## Run demo
+export PYTHONPATH=/path/to/your/SiamFC-Pytorch:$PYTHONPATH
+
 cd SiamFC-Pytorch
 
 mkdir models
@@ -13,6 +15,8 @@ python bin/demo_siamfc --gpu_id [gpu_id] --video_dir path/to/video
 
 ## Training
 Download imagenet vid data
+
+export PYTHONPATH=/path/to/your/SiamFC-Pytorch:$PYTHONPATH
 
 cd SiamFC-Pytorch
 
