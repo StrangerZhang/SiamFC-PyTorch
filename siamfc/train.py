@@ -8,6 +8,7 @@ import pandas as pd
 import os
 import cv2
 import pickle
+import lmdb
 
 from fire import Fire
 from torch.autograd import Variable
@@ -23,7 +24,7 @@ from .alexnet import SiameseAlexNet
 from .dataset import ImagnetVIDDataset
 from .custom_transforms import Normalize, ToTensor, RandomStretch, RandomCrop, CenterCrop
 
-def train(gpu_id, data_dir='/home/zhangfangyi/data/ILSVRC2015_VID_CURATION'):
+def train(gpu_id, data_dir):
     # loading meta data
     meta_data_path = os.path.join(data_dir, "meta_data.pkl")
     meta_data = pickle.load(open(meta_data_path,'rb'))
@@ -34,15 +35,16 @@ def train(gpu_id, data_dir='/home/zhangfangyi/data/ILSVRC2015_VID_CURATION'):
             random_state=config.seed)
 
     # define transforms
+    center_crop_size = config.instance_size - config.total_stride
     random_crop_size = config.instance_size - 2 * config.total_stride
     train_z_transforms = transforms.Compose([
         RandomStretch(),
-        RandomCrop((random_crop_size, random_crop_size)),
         CenterCrop((config.exemplar_size, config.exemplar_size)),
         ToTensor()
     ])
     train_x_transforms = transforms.Compose([
         RandomStretch(),
+        CenterCrop((center_crop_size, center_crop_size)),
         RandomCrop((random_crop_size, random_crop_size)),
         ToTensor()
     ])
@@ -54,9 +56,13 @@ def train(gpu_id, data_dir='/home/zhangfangyi/data/ILSVRC2015_VID_CURATION'):
         ToTensor()
     ])
 
+    # open lmdb
+    db = lmdb.open(data_dir+'.lmdb', readonly=True, map_size=int(50e9))
+
     # create dataset
-    train_dataset = ImagnetVIDDataset(train_videos, data_dir, train_z_transforms, train_x_transforms)
-    valid_dataset = ImagnetVIDDataset(valid_videos, data_dir, valid_z_transforms, valid_x_transforms)
+    train_dataset = ImagnetVIDDataset(db, train_videos, data_dir, train_z_transforms, train_x_transforms)
+    valid_dataset = ImagnetVIDDataset(db, valid_videos, data_dir, valid_z_transforms, valid_x_transforms, training=False)
+    
 
     # create dataloader
     trainloader = DataLoader(train_dataset, batch_size=config.train_batch_size,
@@ -71,8 +77,9 @@ def train(gpu_id, data_dir='/home/zhangfangyi/data/ILSVRC2015_VID_CURATION'):
 
     # start training
     with torch.cuda.device(gpu_id):
-        model = SiameseAlexNet(gpu_id, train=True).cuda()
-        # optimizer = torch.optim.Adam(model.parameters(), lr=config.lr, weight_decay=config.weight_decay)
+        model = SiameseAlexNet(gpu_id, train=True)
+        model.init_weights()
+        model = model.cuda()
         optimizer = torch.optim.SGD(model.parameters(), lr=config.lr, momentum=config.momentum, weight_decay=config.weight_decay)
         scheduler = StepLR(optimizer, step_size=config.step_size, gamma=config.gamma)
 
@@ -107,7 +114,5 @@ def train(gpu_id, data_dir='/home/zhangfangyi/data/ILSVRC2015_VID_CURATION'):
                     (epoch, valid_loss, train_loss))
             summary_writer.add_scalar('valid/loss', valid_loss, (epoch+1)*len(trainloader))
 
-            # if best_loss > valid_loss:
-            #    best_loss = valid_loss
-            torch.save(model.state_dict(), "./models/siamfc.pth")
+            torch.save(model.cpu().state_dict(), "./models/siamfc_{}.pth".format(epoch+1))
             scheduler.step()

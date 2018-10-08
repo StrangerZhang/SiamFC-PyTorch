@@ -41,14 +41,13 @@ def worker(output_dir, video_dir):
                 trajs[trkid].append(filename)
             else:
                 trajs[trkid] = [filename]
-            instance_img, _ = get_instance_image(img, bbox,
+            instance_img, _, _ = get_instance_image(img, bbox,
                     config.exemplar_size, config.instance_size, config.context_amount, img_mean)
-            instance_img_name = os.path.join(save_folder, filename+".{:02d}.x.JPEG".format(trkid))
+            instance_img_name = os.path.join(save_folder, filename+".{:02d}.x.jpg".format(trkid))
             cv2.imwrite(instance_img_name, instance_img)
     return video_name, trajs
 
-def processing(data_dir='/home/zhangfangyi/data/ILSVRC2015',
-               output_dir='/home/zhangfangyi/data/ILSVRC2015_VID_CURATION'):
+def processing(data_dir, output_dir, num_threads):
     # get all 4417 videos
     video_dir = os.path.join(data_dir, 'Data/VID')
     all_videos = glob(os.path.join(video_dir, 'train/ILSVRC2015_VID_train_0000/*')) + \
@@ -57,7 +56,7 @@ def processing(data_dir='/home/zhangfangyi/data/ILSVRC2015',
                  glob(os.path.join(video_dir, 'train/ILSVRC2015_VID_train_0003/*')) + \
                  glob(os.path.join(video_dir, 'val/*'))
     meta_data = []
-    with Pool(processes=config.proc_num_thread) as pool:
+    with Pool(processes=num_threads) as pool:
         for ret in tqdm(pool.imap_unordered(
             functools.partial(worker, output_dir), all_videos), total=len(all_videos)):
             meta_data.append(ret)

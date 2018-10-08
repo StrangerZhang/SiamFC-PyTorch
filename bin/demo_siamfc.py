@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from siamfc import SiamFCTracker
 
-def main(video_dir, gpu_id,  model_path='./models/siamfc.pth'):
+def main(video_dir, gpu_id,  model_path='./models/siamfc.pth', net='resnet-modified'):
     # load videos
     filenames = sorted(glob.glob(os.path.join(video_dir, "img/*.jpg")),
            key=lambda x: int(os.path.basename(x).split('.')[0]))
@@ -22,9 +22,8 @@ def main(video_dir, gpu_id,  model_path='./models/siamfc.pth'):
 
     title = video_dir.split('/')[-1]
     # starting tracking
-    tracker = SiamFCTracker(model_path, gpu_id)
+    tracker = SiamFCTracker(model_path, gpu_id, net)
     for idx, frame in enumerate(frames):
-        # tic = time.time()
         if idx == 0:
             bbox = gt_bboxes.iloc[0].values
             tracker.init(frame, bbox)
@@ -32,8 +31,6 @@ def main(video_dir, gpu_id,  model_path='./models/siamfc.pth'):
                     bbox[0]+bbox[2]-1, bbox[1]+bbox[3]-1)
         else: 
             bbox = tracker.update(frame)
-        # toc = time.time()
-        # print("Speed: {:.2f}fps".format(1 / (toc -tic)))
         # bbox xmin ymin xmax ymax
         frame = cv2.rectangle(frame,
                               (int(bbox[0]), int(bbox[1])),
@@ -43,7 +40,6 @@ def main(video_dir, gpu_id,  model_path='./models/siamfc.pth'):
         gt_bbox = gt_bboxes.iloc[idx].values
         gt_bbox = (gt_bbox[0], gt_bbox[1],
                    gt_bbox[0]+gt_bbox[2], gt_bbox[1]+gt_bbox[3])
-        frame = frame.squeeze()
         frame = cv2.rectangle(frame,
                               (int(gt_bbox[0]-1), int(gt_bbox[1]-1)), # 0-index
                               (int(gt_bbox[2]-1), int(gt_bbox[3]-1)),

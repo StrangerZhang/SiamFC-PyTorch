@@ -13,7 +13,6 @@ def run_SiamFC(seq, rp, saveimage, seq_idx=0):
     w = seq.init_rect[2]
     h = seq.init_rect[3]
 
-    # frames = [cv2.cvtColor(cv2.imread(filename), cv2.COLOR_BGR2RGB) for filename in seq.s_frames]
     tic = time.clock()
     # starting tracking
     tracker = SiamFCTracker(config.model_path, config.gpu_id, net=config.arch)
@@ -24,7 +23,7 @@ def run_SiamFC(seq, rp, saveimage, seq_idx=0):
             bbox = (x, y, w, h)
             tracker.init(frame, bbox)
             bbox = (bbox[0], bbox[1], bbox[0]+bbox[2], bbox[1]+bbox[3]) # 1-idx
-        else: # last frame
+        else:
             bbox = tracker.update(frame)
         res.append((bbox[0], bbox[1], bbox[2]-bbox[0], bbox[3]-bbox[1])) # 1-idx
     duration = time.clock() - tic

@@ -8,6 +8,7 @@ from torch import nn
 
 from .config import config
 
+"""
 class SiameseAlexNetRaw(nn.Module):
     def __init__(self):
         super(SiameseAlexNetRaw, self).__init__()
@@ -27,11 +28,7 @@ class SiameseAlexNetRaw(nn.Module):
         self.exemplar = None
 
     def load_weights(self):
-        # self.load_state_dict(alexnet(pretrained=True).state_dict(), strict=False)
-        params = dict(alexnet(pretrained=True).named_parameters())
-        own_params = dict(self.named_parameters())
-        for key in list(own_params.keys()):
-            own_params[key].data[:] = params[key].data[:]
+        self.load_state_dict(alexnet(pretrained=True).state_dict(), strict=False)
 
     def forward(self, x):
         exemplar, instance = x
@@ -52,7 +49,7 @@ class SiameseAlexNetRaw(nn.Module):
             instance = self.features(instance)
             response_map = F.conv2d(instance, self.exemplar)
             return response_map
-
+"""
 class SiameseAlexNet(nn.Module):
     def __init__(self, gpu_id, train=True):
         super(SiameseAlexNet, self).__init__()
@@ -85,6 +82,14 @@ class SiameseAlexNet(nn.Module):
                 self.valid_weight = torch.from_numpy(weight).cuda()
         self.exemplar = None
 
+    def init_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight.data, mode='fan_out', nonlinearity='relu')
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+
     def forward(self, x):
         exemplar, instance = x
         if exemplar is not None and instance is not None:
@@ -92,8 +97,9 @@ class SiameseAlexNet(nn.Module):
             exemplar = self.features(exemplar)
             instance = self.features(instance)
             score_map = []
-            if batch_size > 1:
-                for i in range(batch_size):
+            N, C, H, W = instance.shape
+            if N > 1:
+                for i in range(N):
                     score = F.conv2d(instance[i:i+1], exemplar[i:i+1]) * config.response_scale + self.corr_bias
                     score_map.append(score)
                 return torch.cat(score_map, dim=0)
@@ -114,7 +120,7 @@ class SiameseAlexNet(nn.Module):
         return F.binary_cross_entropy_with_logits(pred, self.gt)
 
     def weighted_loss(self, pred):
-        if self.train:
+        if self.training:
             return F.binary_cross_entropy_with_logits(pred, self.train_gt,
                     self.train_weight, reduction='sum') / config.train_batch_size # normalize the batch_size
         else:
@@ -135,5 +141,4 @@ class SiameseAlexNet(nn.Module):
         weights[mask == 1] = 0.5 / np.sum(mask == 1)
         weights[mask == 0] = 0.5 / np.sum(mask == 0)
         mask = np.repeat(mask, config.train_batch_size, axis=0)[:, np.newaxis, :, :]
-        # weights = np.repeat(weights, config.train_batch_size, axis=0)[:, np.newaxis, :, :]
         return mask.astype(np.float32), weights.astype(np.float32)

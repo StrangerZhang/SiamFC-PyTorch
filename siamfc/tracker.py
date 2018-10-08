@@ -9,31 +9,22 @@ import warnings
 from torch.autograd import Variable
 
 from .alexnet import SiameseAlexNet, SiameseAlexNetRaw
+from .resnet import SiameseResNet50
 from .config import config
-from .utils import get_exemplar_image, get_pyramid_instance_image
+from .utils import get_exemplar_image, get_pyramid_instance_image, get_instance_image
 from .custom_transforms import Normalize, ToTensor
 
+torch.set_num_threads(1) # otherwise pytorch will take all cpus
 
 class SiamFCTracker:
-    def __init__(self, model_path, gpu_id, net='modified'):
+    def __init__(self, model_path, gpu_id):
         self.gpu_id = gpu_id
         with torch.cuda.device(gpu_id):
-            if net == 'modified':
-                self.model = SiameseAlexNet(gpu_id, train=False)
-                self.model.load_state_dict(torch.load(model_path))
-                self.model = self.model.cuda()
-            else:
-                self.model = SiameseAlexNetRaw()
-                self.model.load_weights()
-                self.model = self.model.cuda()
-            self.model.eval() # important to keep batchnorm runnin mean ans std not change
-        if net == 'modified':
+            self.model = SiameseAlexNet(gpu_id, train=False)
+            self.model.load_state_dict(torch.load(model_path))
+            self.model = self.model.cuda()
+            self.model.eval() 
             self.transforms = transforms.Compose([
-                ToTensor()
-            ])
-        else:
-            self.transforms = transforms.Compose([
-                Normalize(),
                 ToTensor()
             ])
 
@@ -47,16 +38,18 @@ class SiamFCTracker:
         return cos_window
 
     def init(self, frame, bbox):
-        """
+        """ initialize siamfc tracker
+        Args:
+            frame: an RGB image
+            bbox: one-based bounding box [x, y, width, height]
         """
         self.bbox = (bbox[0]-1, bbox[1]-1, bbox[0]-1+bbox[2], bbox[1]-1+bbox[3]) # zero based
         self.pos = np.array([bbox[0]-1+(bbox[2]-1)/2, bbox[1]-1+(bbox[3]-1)/2])  # center x, center y, zero based
-        self.target_sz = np.array([bbox[2], bbox[3]])                # width, height
+        self.target_sz = np.array([bbox[2], bbox[3]])                            # width, height
         # get exemplar img
         self.img_mean = tuple(map(int, frame.mean(axis=(0, 1))))
         exemplar_img, scale_z, s_z = get_exemplar_image(frame, self.bbox,
                 config.exemplar_size, config.context_amount, self.img_mean)
-        # cv2.imshow("exemplar_img", cv2.cvtColor(exemplar_img, cv2.COLOR_RGB2BGR))
         exemplar_img = self.transforms(exemplar_img)[None,:,:,:]   # add new axis
 
         # get exemplar feature
@@ -83,9 +76,15 @@ class SiamFCTracker:
         self.max_s_x = 5 * self.s_x
 
     def update(self, frame):
+        """track object based on the previous frame
+        Args:
+            frame: an RGB image
+
+        Returns:
+            bbox: tuple of 1-based bounding box(xmin, ymin, xmax, ymax)
+        """
         size_x_scales = self.s_x * self.scales
         pyramid = get_pyramid_instance_image(frame, self.pos, config.instance_size, size_x_scales, self.img_mean)
-        # cv2.imshow("center_image", cv2.cvtColor(pyramid[0], cv2.COLOR_BGR2RGB))
         instance_imgs = torch.cat([self.transforms(x)[None,:,:,:] for x in pyramid], dim=0)
         with torch.cuda.device(self.gpu_id):
             instance_imgs_var = Variable(instance_imgs.cuda())
@@ -103,10 +102,6 @@ class SiamFCTracker:
         response_map = (1 - config.window_influence) * response_map + \
                 config.window_influence * self.cosine_window
         max_r, max_c = np.unravel_index(response_map.argmax(), response_map.shape)
-        #cv2.namedWindow('response',cv2.WINDOW_NORMAL)
-        #cv2.imshow('response', response_maps[scale_idx] / response_maps[scale_idx].max())
-        #cv2.imshow('response_up', (response_map / response_map.max()))
-        #cv2.waitKey(0)
         # displacement in interpolation response
         disp_response_interp = np.array([max_c, max_r]) - (self.interp_response_sz-1) / 2.
         # displacement in input
@@ -114,7 +109,6 @@ class SiamFCTracker:
         # displacement in frame
         scale = self.scales[scale_idx]
         disp_response_frame = disp_response_input * (self.s_x * scale) / config.instance_size
-        # disp_response_frame = disp_response_input * self.s_x / config.instance_size
         # position in frame coordinates
         self.pos += disp_response_frame
         # scale damping and saturation
