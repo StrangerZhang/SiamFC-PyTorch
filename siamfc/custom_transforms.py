@@ -5,7 +5,6 @@ import cv2
 class RandomStretch(object):
     def __init__(self, max_stretch=0.05):
         self.max_stretch = max_stretch
-        self.interpolation = interpolation
 
     def __call__(self, sample):
         scale_h = 1.0 + np.random.uniform(-self.max_stretch, self.max_stretch)

@@ -8,8 +8,7 @@ import warnings
 
 from torch.autograd import Variable
 
-from .alexnet import SiameseAlexNet, SiameseAlexNetRaw
-from .resnet import SiameseResNet50
+from .alexnet import SiameseAlexNet
 from .config import config
 from .utils import get_exemplar_image, get_pyramid_instance_image, get_instance_image
 from .custom_transforms import Normalize, ToTensor

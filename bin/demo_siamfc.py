@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from siamfc import SiamFCTracker
 
-def main(video_dir, gpu_id,  model_path='./models/siamfc.pth', net='resnet-modified'):
+def main(video_dir, gpu_id,  model_path='./models/siamfc_pretrained.pth'):
     # load videos
     filenames = sorted(glob.glob(os.path.join(video_dir, "img/*.jpg")),
            key=lambda x: int(os.path.basename(x).split('.')[0]))
@@ -22,7 +22,7 @@ def main(video_dir, gpu_id,  model_path='./models/siamfc.pth', net='resnet-modif
 
     title = video_dir.split('/')[-1]
     # starting tracking
-    tracker = SiamFCTracker(model_path, gpu_id, net)
+    tracker = SiamFCTracker(model_path, gpu_id)
     for idx, frame in enumerate(frames):
         if idx == 0:
             bbox = gt_bboxes.iloc[0].values

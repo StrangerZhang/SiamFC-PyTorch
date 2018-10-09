@@ -4,6 +4,7 @@ import numpy as np
 import argparse
 
 from scipy import io as sio
+from tqdm import tqdm
 
 # code adapted from https://github.com/bilylee/SiamFC-TensorFlow/blob/master/utils/train_utils.py
 def convert(mat_path):
@@ -25,7 +26,7 @@ def convert(mat_path):
                 (3, 'conv'): 8,  (3, 'bn'): 9,
                 (4, 'conv'): 11, (4, 'bn'): 12,
                 (5, 'conv'): 14}
-    for i in range(netparams.size):
+    for i in tqdm(range(netparams.size)):
         param = netparams[0][i]
         name = param["name"][0]
         value = param["value"]
@@ -65,8 +66,6 @@ def convert(mat_path):
                     params['features.{}.bias'.format(idx)] = torch.from_numpy(value)
             else:
                 raise Exception
-    for key, value in params.items():
-        print(key, value.shape)
     return params
 
 if __name__ == '__main__':

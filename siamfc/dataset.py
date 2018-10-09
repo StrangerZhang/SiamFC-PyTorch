@@ -26,12 +26,12 @@ class ImagnetVIDDataset(Dataset):
                     del trajs[trkid]
 
         self.txn = db.begin(write=False)
-        self.num = len(self.video_names) if config.num_per_epoc is None or not training\
+        self.num = len(self.video_names) if config.num_per_epoch is None or not training\
                 else config.num_per_epoch
 
     def imread(self, path):
-        md5 = hashlib.md5(path.encode()).digest()
-        img_buffer = self.txn.get(md5)
+        key = hashlib.md5(path.encode()).digest()
+        img_buffer = self.txn.get(key)
         img_buffer = np.frombuffer(img_buffer, np.uint8)
         img = cv2.imdecode(img_buffer, cv2.IMREAD_COLOR)
         return img
@@ -46,14 +46,14 @@ class ImagnetVIDDataset(Dataset):
         assert len(traj) > 1, "video_name: {}".format(video)
         # sample exemplar
         exemplar_idx = np.random.choice(list(range(len(traj))))
-        exemplar_name = os.path.join(self.data_dir, video, traj[exemplar_idx]+".{:02d}.x.jpg".format(trkid))
+        exemplar_name = os.path.join(self.data_dir, video, traj[exemplar_idx]+".{:02d}.x.JPEG".format(trkid))
         exemplar_img = self.imread(exemplar_name)
         exemplar_img = cv2.cvtColor(exemplar_img, cv2.COLOR_BGR2RGB)
         # sample instance
         low_idx = max(0, exemplar_idx - config.frame_range)
         up_idx = min(len(traj), exemplar_idx + config.frame_range)
         instance = np.random.choice(traj[low_idx:exemplar_idx] + traj[exemplar_idx+1:up_idx])
-        instance_name = os.path.join(self.data_dir, video, instance+".{:02d}.x.jpg".format(trkid))
+        instance_name = os.path.join(self.data_dir, video, instance+".{:02d}.x.JPEG".format(trkid))
         instance_img = self.imread(instance_name)
         instance_img = cv2.cvtColor(instance_img, cv2.COLOR_BGR2RGB)
         exemplar_img = self.z_transforms(exemplar_img)

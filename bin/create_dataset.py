@@ -56,6 +56,8 @@ def processing(data_dir, output_dir, num_threads):
                  glob(os.path.join(video_dir, 'train/ILSVRC2015_VID_train_0003/*')) + \
                  glob(os.path.join(video_dir, 'val/*'))
     meta_data = []
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
     with Pool(processes=num_threads) as pool:
         for ret in tqdm(pool.imap_unordered(
             functools.partial(worker, output_dir), all_videos), total=len(all_videos)):
