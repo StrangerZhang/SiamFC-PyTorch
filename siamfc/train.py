@@ -114,5 +114,5 @@ def train(gpu_id, data_dir):
                     (epoch, valid_loss, train_loss))
             summary_writer.add_scalar('valid/loss', valid_loss, (epoch+1)*len(trainloader))
 
-            torch.save(model.cpu().state_dict(), "./models/siamfc_{}.pth".format(epoch+1))
+            torch.save(model.state_dict(), "./models/siamfc_{}.pth".format(epoch+1))
             scheduler.step()
