@@ -7,7 +7,7 @@ cd SiamFC-Pytorch
 
 mkdir models
 
-wget http://www.robots.ox.ac.uk/%7Eluca/stuff/siam-fc_nets/2016-08-17.net.mat -o models/2016-08-17.net.mat
+wget http://www.robots.ox.ac.uk/%7Eluca/stuff/siam-fc_nets/2016-08-17.net.mat -P models/
 
 python bin/convert_pretrained_model.py
 
