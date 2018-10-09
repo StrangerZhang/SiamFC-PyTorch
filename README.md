@@ -17,7 +17,7 @@ python bin/demo_siamfc --gpu-id [gpu_id] --video-dir path/to/video
 ```
 
 ## Training
-Download imagenet vid data
+Download ILSVRC2015-VID 
 
 ```bash
 export PYTHONPATH=/path/to/your/SiamFC-Pytorch:$PYTHONPATH
