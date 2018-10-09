@@ -12,6 +12,7 @@ wget http://www.robots.ox.ac.uk/%7Eluca/stuff/siam-fc_nets/2016-08-17.net.mat -P
 
 python bin/convert_pretrained_model.py
 
+# video dir should conatin groundtruth_rect.txt which the same format like otb
 python bin/demo_siamfc --gpu-id [gpu_id] --video-dir path/to/video
 ```
 
