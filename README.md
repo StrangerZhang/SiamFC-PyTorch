@@ -6,8 +6,6 @@ export PYTHONPATH=/path/to/your/SiamFC-Pytorch:$PYTHONPATH
 
 cd SiamFC-Pytorch
 
-mkdir models
-
 wget http://www.robots.ox.ac.uk/%7Eluca/stuff/siam-fc_nets/2016-08-17.net.mat -P models/
 
 python bin/convert_pretrained_model.py
@@ -23,8 +21,6 @@ Download ILSVRC2015-VID
 export PYTHONPATH=/path/to/your/SiamFC-Pytorch:$PYTHONPATH
 
 cd SiamFC-Pytorch
-
-mkdir models
 
 python bin/create_dataset.py --data-dir path/to/ILSVRC2015 --output-dir path/to/ILSVRC2015_VID_CURATION --num-threads 8
 
