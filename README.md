@@ -8,7 +8,10 @@ cd SiamFC-Pytorch
 
 mkdir models
 
+# for color model
 wget http://www.robots.ox.ac.uk/%7Eluca/stuff/siam-fc_nets/2016-08-17.net.mat -P models/
+# for color+gray model
+wget http://www.robots.ox.ac.uk/%7Eluca/stuff/siam-fc_nets/2016-08-17_gray025.net.mat -P models/
 
 python bin/convert_pretrained_model.py
 
@@ -38,10 +41,11 @@ python bin/train_siamfc.py --gpu-id [gpu_id] --data-dir path/to/your/ILSVRC2015_
 ## Benchmark results
 #### OTB100
 
-| Tracker 			    | AUC            |
-| --------------------------------- | -------------- |
-| SiamFC(converted from matconvnet) | 55.54(vs 0.582)|
-| SiamFC(trained from scratch)      | 57.85(vs 0.582)|
+| Tracker 			    													| AUC            |
+| ------------------------------------------	| -------------- |
+| SiamFC-color(converted from matconvnet) 		| 55.54(vs 58.2) |
+| SiamFC-color+gray(converted from matconvert)| 58.18(vs 58.2) |
+| SiamFC(trained from scratch)      				  | 57.85(vs 58.2) |
 
 
 ## Reference
