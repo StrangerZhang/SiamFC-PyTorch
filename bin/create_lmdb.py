@@ -22,6 +22,7 @@ def worker(video_name):
 
 def create_lmdb(data_dir, output_dir, num_threads):
     video_names = glob(data_dir+'/*')
+    video_names = [x for x in video_names if os.path.isdir(x)]
     db = lmdb.open(output_dir, map_size=int(50e9))
     with Pool(processes=num_threads) as pool:
         for ret in tqdm(pool.imap_unordered(
