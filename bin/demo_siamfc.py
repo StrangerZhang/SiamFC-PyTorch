@@ -24,7 +24,7 @@ def main(video_dir, gpu_id,  model_path):
 
     title = video_dir.split('/')[-1]
     # starting tracking
-    tracker = SiamFCTracker(model_path, gpu_id, net)
+    tracker = SiamFCTracker(model_path, gpu_id)
     for idx, frame in enumerate(frames):
         if idx == 0:
             bbox = gt_bboxes.iloc[0].values

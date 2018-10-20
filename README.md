@@ -7,17 +7,20 @@ cd SiamFC-Pytorch
 mkdir models
 
 # for color model
-wget http://www.robots.ox.ac.uk/%7Eluca/stuff/siam-fc_nets/2016-08-17.net.mat -o models/2016-08-17.net.mat
+wget http://www.robots.ox.ac.uk/%7Eluca/stuff/siam-fc_nets/2016-08-17.net.mat -P models/
 # for color+gray model
-python bin/convert_pretrained_model.py --mat-path path/to/your/matconvnetmodel
+wget http://www.robots.ox.ac.uk/%7Eluca/stuff/siam-fc_nets/2016-08-17_gray025.net.mat -P models/
 
-python bin/demo_siamfc --gpu-id [gpu_id] --video-dir path/to/video --model-path path/to/model
+python bin/convert_pretrained_model.py
 
+# video dir should conatin groundtruth_rect.txt which the same format like otb
+python bin/demo_siamfc --gpu-id [gpu_id] --video-dir path/to/video
 ```
-## Training
-Download imagenet vid data
-```bash
 
+## Training
+Download ILSVRC2015-VID 
+
+```bash
 cd SiamFC-Pytorch
 
 mkdir models
@@ -33,23 +36,26 @@ python bin/create_lmdb.py --data-dir path/ILSVRC_VID_CURATION \
 						  --output-dir path/to/ILSVRC2015_VID_CURATION.lmdb \
 						  --num-threads 8
 
+python bin/train_siamfc.py --gpu-id [gpu_id] --data-dir path/to/your/ILSVRC2015_VID_CURATION 
+
 # training should take about 2.5~3hrs
 python bin/train_siamfc.py --gpu-id [gpu_id] --data-dir path/to/ILSVRC2015_VID_CURATION
 ```
 ## Benchmark results
 #### OTB100
 
+<<<<<<< HEAD
 | Tracker 			    					 | AUC            |
 | --------------------------------- 		 | -------------- |
 | SiamFC-color(converted from matconvnet)    | 0.5544		  |
-| SiamFC-color+gray(converted from matconnet | 0.582(vs 0.582)|
-| SiamFC(trained from scratch)      		 | 0.582(vs 0.582)|
+| SiamFC-color+gray(converted from matconnet | 0.5818(vs 0.582)|
+| SiamFC(trained from scratch)      		 | 0.5820(vs 0.582)|
 
 ## Note
 We use SGD without momentum, weight decay setting 0, detailed setting can be found in config.py
 Training is unstable, In order to reproduce the result, you should evaluate all epoches between 
 10 to 30 on OTB100, and choose the best one.
-below is my one of my experiment.
+below is one of my experiment result.
 ```bash
 Epoch 11 AUC: 0.5522
 Epoch 12 AUC: 0.5670

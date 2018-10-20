@@ -25,6 +25,8 @@ from .dataset import ImagnetVIDDataset
 from .custom_transforms import Normalize, ToTensor, RandomStretch, \
     RandomCrop, CenterCrop, RandomBlur, ColorAug
 
+torch.manual_seed(1234)
+
 def train(gpu_id, data_dir):
     # loading meta data
     meta_data_path = os.path.join(data_dir, "meta_data.pkl")
