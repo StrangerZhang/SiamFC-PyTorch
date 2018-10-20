@@ -4,6 +4,8 @@ import os
 import cv2
 import functools
 import xml.etree.ElementTree as ET
+import sys
+sys.path.append(os.getcwd())
 
 from multiprocessing import Pool
 from fire import Fire
@@ -47,7 +49,7 @@ def worker(output_dir, video_dir):
             cv2.imwrite(instance_img_name, instance_img)
     return video_name, trajs
 
-def processing(data_dir, output_dir, num_threads):
+def processing(data_dir, output_dir, num_threads=32):
     # get all 4417 videos
     video_dir = os.path.join(data_dir, 'Data/VID')
     all_videos = glob(os.path.join(video_dir, 'train/ILSVRC2015_VID_train_0000/*')) + \
@@ -56,6 +58,8 @@ def processing(data_dir, output_dir, num_threads):
                  glob(os.path.join(video_dir, 'train/ILSVRC2015_VID_train_0003/*')) + \
                  glob(os.path.join(video_dir, 'val/*'))
     meta_data = []
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
     with Pool(processes=num_threads) as pool:
         for ret in tqdm(pool.imap_unordered(
             functools.partial(worker, output_dir), all_videos), total=len(all_videos)):

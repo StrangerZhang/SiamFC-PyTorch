@@ -22,7 +22,8 @@ from tensorboardX import SummaryWriter
 from .config import config
 from .alexnet import SiameseAlexNet
 from .dataset import ImagnetVIDDataset
-from .custom_transforms import Normalize, ToTensor, RandomStretch, RandomCrop, CenterCrop
+from .custom_transforms import Normalize, ToTensor, RandomStretch, \
+    RandomCrop, CenterCrop, RandomBlur, ColorAug
 
 def train(gpu_id, data_dir):
     # loading meta data
@@ -31,11 +32,11 @@ def train(gpu_id, data_dir):
     all_videos = [x[0] for x in meta_data]
 
     # split train/valid dataset
-    train_videos, valid_videos = train_test_split(all_videos, test_size=1-config.train_ratio,
-            random_state=config.seed)
+    train_videos, valid_videos = train_test_split(all_videos, 
+            test_size=1-config.train_ratio, random_state=config.seed)
+    train_videos = all_videos
 
     # define transforms
-    center_crop_size = config.instance_size - config.total_stride
     random_crop_size = config.instance_size - 2 * config.total_stride
     train_z_transforms = transforms.Compose([
         RandomStretch(),
@@ -44,13 +45,13 @@ def train(gpu_id, data_dir):
     ])
     train_x_transforms = transforms.Compose([
         RandomStretch(),
-        CenterCrop((center_crop_size, center_crop_size)),
-        RandomCrop((random_crop_size, random_crop_size)),
+        RandomCrop((random_crop_size, random_crop_size),
+                    config.max_translate),
         ToTensor()
     ])
     valid_z_transforms = transforms.Compose([
         CenterCrop((config.exemplar_size, config.exemplar_size)),
-        ToTensor(),
+        ToTensor()
     ])
     valid_x_transforms = transforms.Compose([
         ToTensor()
@@ -60,15 +61,16 @@ def train(gpu_id, data_dir):
     db = lmdb.open(data_dir+'.lmdb', readonly=True, map_size=int(50e9))
 
     # create dataset
-    train_dataset = ImagnetVIDDataset(db, train_videos, data_dir, train_z_transforms, train_x_transforms)
-    valid_dataset = ImagnetVIDDataset(db, valid_videos, data_dir, valid_z_transforms, valid_x_transforms, training=False)
+    train_dataset = ImagnetVIDDataset(db, train_videos, data_dir,
+            train_z_transforms, train_x_transforms)
+    valid_dataset = ImagnetVIDDataset(db, valid_videos, data_dir,
+            valid_z_transforms, valid_x_transforms, training=False)
     
-
     # create dataloader
     trainloader = DataLoader(train_dataset, batch_size=config.train_batch_size,
-            shuffle=True, num_workers=config.train_num_workers, drop_last=True)
+            shuffle=True, pin_memory=True, num_workers=config.train_num_workers, drop_last=True)
     validloader = DataLoader(valid_dataset, batch_size=config.valid_batch_size,
-            shuffle=False, num_workers=config.valid_num_workers, drop_last=True)
+            shuffle=False, pin_memory=True, num_workers=config.valid_num_workers, drop_last=True)
 
     # create summary writer
     if not os.path.exists(config.log_dir):
@@ -80,17 +82,18 @@ def train(gpu_id, data_dir):
         model = SiameseAlexNet(gpu_id, train=True)
         model.init_weights()
         model = model.cuda()
-        optimizer = torch.optim.SGD(model.parameters(), lr=config.lr, momentum=config.momentum, weight_decay=config.weight_decay)
-        scheduler = StepLR(optimizer, step_size=config.step_size, gamma=config.gamma)
+        optimizer = torch.optim.SGD(model.parameters(), lr=config.lr,
+                momentum=config.momentum, weight_decay=config.weight_decay)
+        scheduler = StepLR(optimizer, step_size=config.step_size, 
+                gamma=config.gamma)
 
-        best_model_filename = None
-        best_loss = np.inf
         for epoch in range(config.epoch):
             train_loss = []
             model.train()
             for i, data in enumerate(tqdm(trainloader)):
                 exemplar_imgs, instance_imgs = data
-                exemplar_var, instance_var = Variable(exemplar_imgs.cuda()), Variable(instance_imgs.cuda())
+                exemplar_var, instance_var = Variable(exemplar_imgs.cuda()), \
+                        Variable(instance_imgs.cuda())
                 optimizer.zero_grad()
                 outputs = model((exemplar_var, instance_var))
                 loss = model.weighted_loss(outputs)
@@ -105,14 +108,17 @@ def train(gpu_id, data_dir):
             model.eval()
             for i, data in enumerate(tqdm(validloader)):
                 exemplar_imgs, instance_imgs = data
-                exemplar_var, instance_var = Variable(exemplar_imgs.cuda()), Variable(instance_imgs.cuda())
+                exemplar_var, instance_var = Variable(exemplar_imgs.cuda()),\
+                                             Variable(instance_imgs.cuda())
                 outputs = model((exemplar_var, instance_var))
                 loss = model.weighted_loss(outputs)
                 valid_loss.append(loss.data)
             valid_loss = np.mean(valid_loss)
             print("EPOCH %d valid_loss: %.4f, train_loss: %.4f" %
                     (epoch, valid_loss, train_loss))
-            summary_writer.add_scalar('valid/loss', valid_loss, (epoch+1)*len(trainloader))
-
-            torch.save(model.cpu().state_dict(), "./models/siamfc_{}.pth".format(epoch+1))
+            summary_writer.add_scalar('valid/loss', 
+                    valid_loss, (epoch+1)*len(trainloader))
+            torch.save(model.cpu().state_dict(), 
+                    "./models/siamfc_{}.pth".format(epoch+1))
+            model.cuda()
             scheduler.step()

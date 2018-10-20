@@ -1,18 +1,17 @@
 import numpy as np
 import cv2
 import torch
-import torchvision.transforms as transforms
 import torch.nn.functional as F
 import time
 import warnings
+import torchvision.transforms as transforms
 
 from torch.autograd import Variable
 
-from .alexnet import SiameseAlexNet, SiameseAlexNetRaw
-from .resnet import SiameseResNet50
+from .alexnet import SiameseAlexNet
 from .config import config
+from .custom_transforms import ToTensor
 from .utils import get_exemplar_image, get_pyramid_instance_image, get_instance_image
-from .custom_transforms import Normalize, ToTensor
 
 torch.set_num_threads(1) # otherwise pytorch will take all cpus
 
@@ -24,9 +23,9 @@ class SiamFCTracker:
             self.model.load_state_dict(torch.load(model_path))
             self.model = self.model.cuda()
             self.model.eval() 
-            self.transforms = transforms.Compose([
-                ToTensor()
-            ])
+        self.transforms = transforms.Compose([
+            ToTensor()
+        ])
 
     def _cosine_window(self, size):
         """
@@ -50,9 +49,9 @@ class SiamFCTracker:
         self.img_mean = tuple(map(int, frame.mean(axis=(0, 1))))
         exemplar_img, scale_z, s_z = get_exemplar_image(frame, self.bbox,
                 config.exemplar_size, config.context_amount, self.img_mean)
-        exemplar_img = self.transforms(exemplar_img)[None,:,:,:]   # add new axis
 
         # get exemplar feature
+        exemplar_img = self.transforms(exemplar_img)[None,:,:,:]
         with torch.cuda.device(self.gpu_id):
             exemplar_img_var = Variable(exemplar_img.cuda())
             self.model((exemplar_img_var, None))
@@ -90,10 +89,11 @@ class SiamFCTracker:
             instance_imgs_var = Variable(instance_imgs.cuda())
             response_maps = self.model((None, instance_imgs_var))
             response_maps = response_maps.data.cpu().numpy().squeeze()
-        response_maps_up = [cv2.resize(x, (self.interp_response_sz, self.interp_response_sz), cv2.INTER_CUBIC)
+            response_maps_up = [cv2.resize(x, (self.interp_response_sz, self.interp_response_sz), cv2.INTER_CUBIC)
              for x in response_maps]
         # get max score
         max_score = np.array([x.max() for x in response_maps_up]) * self.penalty
+
         # penalty scale change
         scale_idx = max_score.argmax()
         response_map = response_maps_up[scale_idx]

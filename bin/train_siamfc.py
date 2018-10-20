@@ -1,3 +1,6 @@
+import os
+import sys
+sys.path.append(os.getcwd())
 from fire import Fire
 
 from siamfc import train

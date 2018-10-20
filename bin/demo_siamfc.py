@@ -5,13 +5,15 @@ import argparse
 import numpy as np
 import cv2
 import time
+import sys
+sys.path.append(os.getcwd())
 
 from fire import Fire
 from tqdm import tqdm
 
 from siamfc import SiamFCTracker
 
-def main(video_dir, gpu_id,  model_path='./models/siamfc.pth', net='resnet-modified'):
+def main(video_dir, gpu_id,  model_path):
     # load videos
     filenames = sorted(glob.glob(os.path.join(video_dir, "img/*.jpg")),
            key=lambda x: int(os.path.basename(x).split('.')[0]))

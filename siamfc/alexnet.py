@@ -1,6 +1,8 @@
 import torch
 import numpy as np
 import torch.nn.functional as F
+import torchvision.transforms as transforms
+from .custom_transforms import ToTensor
 
 from torchvision.models import alexnet
 from torch.autograd import Variable
@@ -8,48 +10,6 @@ from torch import nn
 
 from .config import config
 
-"""
-class SiameseAlexNetRaw(nn.Module):
-    def __init__(self):
-        super(SiameseAlexNetRaw, self).__init__()
-        self.features = nn.Sequential(
-            nn.Conv2d(3, 64, 11, 2),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(3, 2),
-            nn.Conv2d(64, 192, 5, 1),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(3, 2),
-            nn.Conv2d(192, 384, 3, 1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(384, 256, 3, 1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(256, 256, 3, 1)
-        )
-        self.exemplar = None
-
-    def load_weights(self):
-        self.load_state_dict(alexnet(pretrained=True).state_dict(), strict=False)
-
-    def forward(self, x):
-        exemplar, instance = x
-        if exemplar is not None and instance is not None:
-            batch_size = exemplar.shape[0]
-            exemplar = self.features(exemplar)
-            instance = self.features(instance)
-            score_map = []
-            if batch_size > 1:
-                for i in range(batch_size):
-                    score_map.append(F.conv2d(instance[i:i+1], exemplar[i:i+1]))
-                return torch.cat(score_map, dim=0)
-            else:
-                return F.conv2d(instance, exemplar)
-        elif exemplar is not None and instance is None:
-            self.exemplar = self.features(exemplar)
-        else:
-            instance = self.features(instance)
-            response_map = F.conv2d(instance, self.exemplar)
-            return response_map
-"""
 class SiameseAlexNet(nn.Module):
     def __init__(self, gpu_id, train=True):
         super(SiameseAlexNet, self).__init__()
@@ -81,6 +41,7 @@ class SiameseAlexNet(nn.Module):
                 self.valid_gt = torch.from_numpy(gt).cuda()
                 self.valid_weight = torch.from_numpy(weight).cuda()
         self.exemplar = None
+        self.gpu_id = gpu_id
 
     def init_weights(self):
         for m in self.modules():
@@ -98,23 +59,21 @@ class SiameseAlexNet(nn.Module):
             instance = self.features(instance)
             score_map = []
             N, C, H, W = instance.shape
-            if N > 1:
-                for i in range(N):
-                    score = F.conv2d(instance[i:i+1], exemplar[i:i+1]) * config.response_scale + self.corr_bias
-                    score_map.append(score)
-                return torch.cat(score_map, dim=0)
-            else:
-                return F.conv2d(instance, exemplar) * config.response_scale + self.bias
+            instance = instance.view(1, -1, H, W)
+            score = F.conv2d(instance, exemplar, groups=N) * config.response_scale \
+                    + self.corr_bias
+            return score.transpose(0, 1)
         elif exemplar is not None and instance is None:
             # inference used
             self.exemplar = self.features(exemplar)
+            self.exemplar = torch.cat([self.exemplar for _ in range(3)], dim=0)
         else:
             # inference used we don't need to scale the reponse or add bias
             instance = self.features(instance)
-            score_map = []
-            for i in range(instance.shape[0]):
-                score_map.append(F.conv2d(instance[i:i+1], self.exemplar))
-            return torch.cat(score_map, dim=0)
+            N, _, H, W = instance.shape
+            instance = instance.view(1, -1, H, W)
+            score = F.conv2d(instance, self.exemplar, groups=N)
+            return score.transpose(0, 1)
 
     def loss(self, pred):
         return F.binary_cross_entropy_with_logits(pred, self.gt)
