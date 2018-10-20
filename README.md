@@ -27,14 +27,14 @@ mkdir models
 
 # using 12 threads should take an hour
 python bin/create_dataset.py --data-dir path/to/ILSVRC2015 \
-							 --output-dir path/to/ILSVRC_VID_CURATION \
-							 --num-threads 8
+			     --output-dir path/to/ILSVRC_VID_CURATION \
+			     --num-threads 8
 
 # ILSVRC2015_VID_CURATION and ILSVRC2015_VID_CURATION.lmdb should be in the same directory
 # the ILSVRC2015_VID_CURATION.lmdb should be about 34G or so
 python bin/create_lmdb.py --data-dir path/ILSVRC_VID_CURATION \
-						  --output-dir path/to/ILSVRC2015_VID_CURATION.lmdb \
-						  --num-threads 8
+			  --output-dir path/to/ILSVRC2015_VID_CURATION.lmdb \
+		          --num-threads 8
 
 python bin/train_siamfc.py --gpu-id [gpu_id] --data-dir path/to/your/ILSVRC2015_VID_CURATION 
 
@@ -44,10 +44,10 @@ python bin/train_siamfc.py --gpu-id [gpu_id] --data-dir path/to/ILSVRC2015_VID_C
 ## Benchmark results
 #### OTB100
 
-| Tracker 			    					 | AUC            |
-| --------------------------------- 		 | -------------- |
-| SiamFC-color(converted from matconvnet)    | 0.5544		  |
-| SiamFC-color+gray(converted from matconnet | 0.5818(vs 0.582)|
+| Tracker 			    		 | AUC             |
+| ---------------------------------------------  | --------------- |
+| SiamFC-color(converted from matconvnet)        | 0.5544          |
+| SiamFC-color+gray(converted from matconnet     | 0.5818(vs 0.582)|
 | SiamFC(trained from scratch)      		 | 0.5820(vs 0.582)|
 
 ## Note
