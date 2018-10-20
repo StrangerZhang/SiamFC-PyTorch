@@ -44,7 +44,6 @@ python bin/train_siamfc.py --gpu-id [gpu_id] --data-dir path/to/ILSVRC2015_VID_C
 ## Benchmark results
 #### OTB100
 
-<<<<<<< HEAD
 | Tracker 			    					 | AUC            |
 | --------------------------------- 		 | -------------- |
 | SiamFC-color(converted from matconvnet)    | 0.5544		  |
