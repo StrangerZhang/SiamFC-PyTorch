@@ -4,10 +4,9 @@ from siamfc import SiamFCTracker, config
 import cv2
 import glob
 import os
-from tqdm import tqdm
 
 
-def run_SiamFC(seq, rp, saveimage, seq_idx=0):
+def run_SiamFC(seq, rp, saveimage):
     x = seq.init_rect[0]
     y = seq.init_rect[1]
     w = seq.init_rect[2]
@@ -17,7 +16,7 @@ def run_SiamFC(seq, rp, saveimage, seq_idx=0):
     # starting tracking
     tracker = SiamFCTracker(config.model_path, config.gpu_id, net=config.arch)
     res = []
-    for idx, frame in enumerate(tqdm(seq.s_frames, position=seq_idx % 24)):
+    for idx, frame in enumerate(seq.s_frames):
         frame = cv2.cvtColor(cv2.imread(frame), cv2.COLOR_BGR2RGB)
         if idx == 0:
             bbox = (x, y, w, h)
