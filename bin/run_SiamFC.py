@@ -14,7 +14,7 @@ def run_SiamFC(seq, rp, saveimage):
 
     tic = time.clock()
     # starting tracking
-    tracker = SiamFCTracker(config.model_path, config.gpu_id, net=config.arch)
+    tracker = SiamFCTracker(config.model_path, config.gpu_id)
     res = []
     for idx, frame in enumerate(seq.s_frames):
         frame = cv2.cvtColor(cv2.imread(frame), cv2.COLOR_BGR2RGB)
