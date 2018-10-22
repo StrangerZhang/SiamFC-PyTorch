@@ -64,7 +64,7 @@ class ImagnetVIDDataset(Dataset):
         # sample instance
         low_idx = max(0, exemplar_idx - config.frame_range)
         up_idx = min(len(traj), exemplar_idx + config.frame_range)
-<<<<<<< HEAD
+
         # create sample weight, if the sample are far away from center
         # the probability being choosen are high
         weights = self._sample_weights(exemplar_idx, low_idx, up_idx, config.sample_type)
