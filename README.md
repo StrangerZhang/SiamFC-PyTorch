@@ -45,7 +45,7 @@ python bin/train_siamfc.py --gpu-id [gpu_id] --data-dir path/to/ILSVRC2015_VID_C
 | Tracker 			    		 | AUC             |
 | ---------------------------------------------  | --------------- |
 | SiamFC-color(converted from matconvnet)        | 0.5544          |
-| SiamFC-color+gray(converted from matconnet     | 0.5818(vs 0.582)|
+| SiamFC-color+gray(converted from matconvnet)   | 0.5818(vs 0.582)|
 | SiamFC(trained from scratch)      		 | 0.5820(vs 0.582)|
 
 ## Note
