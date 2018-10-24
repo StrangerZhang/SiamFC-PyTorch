@@ -36,7 +36,7 @@ python bin/create_lmdb.py --data-dir path/to/data/ILSVRC_VID_CURATION \
 			  --output-dir path/to/data/ILSVRC2015_VID_CURATION.lmdb \
 		          --num-threads 8
 
-# training should take about 2.5~3hrs
+# training should take about 1.5~2hrs on a Titan Xp GPU with 30 epochs
 python bin/train_siamfc.py --gpu-id [gpu_id] --data-dir path/to/data/ILSVRC2015_VID_CURATION
 ```
 ## Benchmark results
