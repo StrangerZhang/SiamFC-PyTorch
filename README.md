@@ -32,7 +32,7 @@ python bin/create_dataset.py --data-dir path/to/ILSVRC2015 \
 
 # ILSVRC2015_VID_CURATION and ILSVRC2015_VID_CURATION.lmdb should be in the same directory
 # the ILSVRC2015_VID_CURATION.lmdb should be about 34G or so
-python bin/create_lmdb.py --data-dir path/ILSVRC_VID_CURATION \
+python bin/create_lmdb.py --data-dir path/to/ILSVRC_VID_CURATION \
 			  --output-dir path/to/ILSVRC2015_VID_CURATION.lmdb \
 		          --num-threads 8
 
