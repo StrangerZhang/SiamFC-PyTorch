@@ -36,7 +36,6 @@ def train(gpu_id, data_dir):
     # split train/valid dataset
     train_videos, valid_videos = train_test_split(all_videos, 
             test_size=1-config.train_ratio, random_state=config.seed)
-    train_videos = all_videos
 
     # define transforms
     random_crop_size = config.instance_size - 2 * config.total_stride
