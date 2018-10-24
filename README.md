@@ -36,8 +36,6 @@ python bin/create_lmdb.py --data-dir path/ILSVRC_VID_CURATION \
 			  --output-dir path/to/ILSVRC2015_VID_CURATION.lmdb \
 		          --num-threads 8
 
-python bin/train_siamfc.py --gpu-id [gpu_id] --data-dir path/to/your/ILSVRC2015_VID_CURATION 
-
 # training should take about 2.5~3hrs
 python bin/train_siamfc.py --gpu-id [gpu_id] --data-dir path/to/ILSVRC2015_VID_CURATION
 ```
