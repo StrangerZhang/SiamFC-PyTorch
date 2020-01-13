@@ -27,12 +27,12 @@ mkdir models
 
 # using 12 threads should take an hour
 python bin/create_dataset.py --data-dir path/to/data/ILSVRC2015 \
-			     --output-dir path/to/data/ILSVRC_VID_CURATION \
+			     --output-dir path/to/data/ILSVRC2015_VID_CURATION \
 			     --num-threads 8
 
 # ILSVRC2015_VID_CURATION and ILSVRC2015_VID_CURATION.lmdb should be in the same directory
 # the ILSVRC2015_VID_CURATION.lmdb should be about 34G or so
-python bin/create_lmdb.py --data-dir path/to/data/ILSVRC_VID_CURATION \
+python bin/create_lmdb.py --data-dir path/to/data/ILSVRC2015_VID_CURATION \
 			  --output-dir path/to/data/ILSVRC2015_VID_CURATION.lmdb \
 		          --num-threads 8
 
